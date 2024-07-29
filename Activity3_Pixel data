@@ -1,7 +1,7 @@
 var img, x, y;
 
 function preload() {
-    img = loadImage("city.jpg");
+    img = loadImage("city.jpeg");
 }
 
 function setup() {

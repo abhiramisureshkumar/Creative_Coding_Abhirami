@@ -39,8 +39,8 @@ function draw() {
     fill(0);
     textSize(18);
     textAlign(LEFT, TOP);
-    text(Score: ${score}, 10, 10);
-    text(Missed: ${missed}, 10, 30);
+    text(`Score: ${score}`, 10, 10);
+    text(`Missed: ${missed}`, 10, 30);
     
     if (missed >= 5) {
       gameState = 'gameOver';
@@ -78,9 +78,9 @@ function showGameOverScreen() {
   textAlign(CENTER, CENTER);
   textSize(36);
   fill(255);
-  text(Game Over, width / 2, height / 2 - 50);
+  text("Game Over", width / 2, height / 2 - 50);
   textSize(18);
-  text(Your Score: ${score}, width / 2, height / 2);
+  text(`Your Score: ${score}`, width / 2, height / 2);
   text("Click to Play Again", width / 2, height / 2 + 50);
 }
 

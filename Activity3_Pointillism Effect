@@ -2,7 +2,7 @@ var img, x, y;
 
 function preload() {
 
-img = loadImage("image.jpg");
+img = loadImage("image.jpeg");
 
 }
 

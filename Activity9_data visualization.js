@@ -1,181 +1,70 @@
-let catcher;
-let objects = [];
-let colors = ['red', 'green', 'blue', 'yellow', 'purple'];
-let score = 0;
-let missed = 0;
-let gameState = 'title'; // 'title', 'playing', 'gameOver'
+
+let table;
+
+function preload() {
+  // Loading the CSV file
+  table = loadTable('music_genres.csv', 'csv', 'header', loadSuccess, loadError);
+}
+
+function loadSuccess() {
+  console.log("CSV loaded successfully");
+}
+
+function loadError() {
+  console.log("Error loading CSV");
+}
 
 function setup() {
-  createCanvas(600, 400); 
-  catcher = new Catcher();
+  createCanvas(600, 650);
   noLoop(); 
-  showTitleScreen();
+  if (table) {
+    console.log(table.getRows()); // Log the rows to check if data is loaded
+  }
 }
 
 function draw() {
-  if (gameState === 'title') {
-    showTitleScreen();
-  } else if (gameState === 'playing') {
-    background(220);
-    
-    // Draw and update catcher
-    catcher.update();
-    catcher.display();
-    
-    // Draw and update falling objects
-    for (let i = objects.length - 1; i >= 0; i--) {
-      objects[i].update();
-      objects[i].display();
-      if (objects[i].offscreen()) {
-        missed++;
-        objects.splice(i, 1);
-      } else if (catcher.hits(objects[i])) {
-        score++;
-        objects.splice(i, 1);
-      }
-    }
-    
-    // Display score and missed count
+  // Gray background
+  background(200);
+
+  // Heading text
+  textSize(24); // Text size
+  textAlign(CENTER, CENTER); // Align text to the center
+  fill(0);
+  text("Popularity of Music Genres", width / 2, 30); // Draw heading at the top center
+
+  let total = 0;
+  // Calculating the total percentage by summing up all values
+  table.getRows().forEach(row => total += row.getNum('Percentage'));
+
+  console.log("Total percentage:", total); // Debug total percentage
+
+  let angleStart = 0;
+  const labelOffset = 250; // Label positioning
+
+  // Iterate through each row of the table
+  table.getRows().forEach(row => {
+    let genre = row.getString('Genre');
+    let percentage = row.getNum('Percentage');
+
+    console.log("Genre:", genre, "Percentage:", percentage); // Debug genre and percentage
+
+    // Calculating the end angle for the current slice
+    let angleEnd = angleStart + (percentage / total) * TWO_PI;
+
+    // Setting a random fill color for the pie slice
+    fill(random(255), random(255), random(255));
+    // Drawing the pie slice using arc
+    arc(width / 2, height / 2 + 50, 400, 400, angleStart, angleEnd, PIE);
+
+    // Calculating label position
+    let labelAngle = angleStart + (angleEnd - angleStart) / 2; // Midpoint angle for label
+    let labelX = width / 2 + cos(labelAngle) * labelOffset; // X position of the label
+    let labelY = height / 2 + 50 + sin(labelAngle) * labelOffset;
     fill(0);
-    textSize(18);
-    textAlign(LEFT, TOP);
-    text(`Score: ${score}`, 10, 10);
-    text(`Missed: ${missed}`, 10, 30);
-    
-    if (missed >= 5) {
-      gameState = 'gameOver';
-      noLoop(); // Stop the game loop
-      setTimeout(showGameOverScreen, 500); // Delay to show game over screen
-    }
-  } else if (gameState === 'gameOver') {
-    showGameOverScreen();
-  }
+    textAlign(CENTER, CENTER);
+    text(`${genre} (${percentage}%)`, labelX, labelY); // Corrected text syntax
+
+    // Updating the starting angle for the next slice
+    angleStart = angleEnd;
+  });
 }
-
-function showTitleScreen() {
-  background(0);
-  textAlign(CENTER, CENTER);
-  
-  // Title
-  textSize(36);
-  fill(255);
-  text("Colorful Catch Game", width / 2, height / 2 - 100);
-  
-  // Instructions
-  textSize(18);
-  fill(255);
-  text("Use arrow keys to move the catcher", width / 2, height / 2 - 30);
-  text("Catch the falling colored objects", width / 2, height / 2);
-  text("Avoid missing too many objects", width / 2, height / 2 + 30);
-  
-  // Start button
-  textSize(18);
-  text("Click to Start", width / 2, height / 2 + 100);
-}
-
-function showGameOverScreen() {
-  background(0);
-  textAlign(CENTER, CENTER);
-  textSize(36);
-  fill(255);
-  text("Game Over", width / 2, height / 2 - 50);
-  textSize(18);
-  text(`Your Score: ${score}`, width / 2, height / 2);
-  text("Click to Play Again", width / 2, height / 2 + 50);
-}
-
-function mousePressed() {
-  if (gameState === 'title') {
-    gameState = 'playing';
-    loop(); // Start the game loop
-    setInterval(createFallingObject, 1000); // Creating a new object every second
-  } else if (gameState === 'gameOver') {
-    resetGame();
-    gameState = 'playing';
-    loop(); // Starts the game loop
-  }
-}
-
-function resetGame() {
-  objects = [];
-  score = 0;
-  missed = 0;
-  catcher = new Catcher();
-}
-
-function createFallingObject() {
-  let x = random(width);
-  let color = random(colors);
-  objects.push(new FallingObject(x, color));
-}
-
-function keyPressed() {
-  if (keyCode === LEFT_ARROW) {
-    catcher.move(-1);
-  } else if (keyCode === RIGHT_ARROW) {
-    catcher.move(1);
-  }
-}
-
-function keyReleased() {
-  if (keyCode === LEFT_ARROW || keyCode === RIGHT_ARROW) {
-    catcher.move(0);
-  }
-}
-
-// Catcher class
-class Catcher {
-  constructor() {
-    this.x = width / 2;
-    this.width = 80; 
-    this.height = 20;
-    this.speed = 10;
-    this.direction = 0;
-  }
-
-  update() {
-    this.x += this.direction * this.speed;
-    this.x = constrain(this.x, 0, width - this.width);
-  }
-
-  display() {
-    fill(0); // Black color
-    noStroke();
-    rect(this.x, height - this.height, this.width, this.height);
-  }
-
-  move(dir) {
-    this.direction = dir;
-  }
-
-  hits(object) {
-    return (object.x > this.x && object.x < this.x + this.width &&
-            object.y + object.size / 2 > height - this.height);
-  }
-}
-
-// FallingObject class
-class FallingObject {
-  constructor(x, color) {
-    this.x = x;
-    this.y = 0;
-    this.size = 30;
-    this.color = color;
-    this.speed = 5;
-  }
-
-  update() {
-    this.y += this.speed;
-  }
-
-  display() {
-    fill(this.color);
-    noStroke();
-    ellipse(this.x, this.y, this.size, this.size);
-  }
-
-  offscreen() {
-    return this.y > height;
-  }
-}
-
